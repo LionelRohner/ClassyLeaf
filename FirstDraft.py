@@ -23,7 +23,8 @@ gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
 # cant get smaller
 rescaled = rescale(image, 0.2, anti_aliasing=True)
-
+# cv2.imshow("Image", rescaled)
+# cv2.waitKey(0)
 
 ### Downsampling ###
 
@@ -32,15 +33,26 @@ rescaled = rescale(image, 0.2, anti_aliasing=True)
 ### Normalize and threshold ###
 
 # Gaussian blurring to reduce high frequency noise
-blurred_img = cv2.GaussianBlur(rescaled, (27,27), 1.2)
+blurred_img = cv2.GaussianBlur(rescaled, (7,7), 1.2)
 mean_img, SD_img = cv2.meanStdDev(blurred_img)
 min_img, max_img = np.amin(blurred_img), np.amax(blurred_img)
 
-thresh_img1 = cv2.threshold(blurred_img, max_img - SD_img, 255, cv2.THRESH_BINARY)[1]
+# threshold
+thresh_img = cv2.threshold(blurred_img, max_img - 2*SD_img, 255, cv2.THRESH_BINARY)[1]
 
+# canny edged
+# edged = cv2.Canny(thresh_img, 30, 200)
 
-cv2.imshow("Image", thresh_img1)
-cv2.waitKey(0)
+contours, hierarchy = cv2.findContours(thresh_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+
+#create an empty image for contours
+img_contours = np.zeros(image.shape)
+# draw the contours on the empty image
+cnt_img = cv2.drawContours(img_contours, contours, -1, (0,255,0), 3)
+print(cnt_img)
+
+# cv2.imshow("Image", cnt_img)
+# cv2.waitKey(0)
 
 
 quit()
