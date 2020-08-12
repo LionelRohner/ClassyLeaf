@@ -15,7 +15,7 @@ from imutils import contours
 # set path and file
 path = r'C:\Users\stryc\OneDrive\GitHub\Projects\ClassyLeaf\Pics'
 # folder = '\F1'
-filename = '\B1.jpg'
+filename = '\FA1.jpg'
 
 # load image
 image = cv2.imread(path + filename)
@@ -33,11 +33,13 @@ rescaled = rescale(image, 0.2, anti_aliasing=True)
 
 # Gaussian blurring to reduce high frequency noise
 blurred_img = cv2.GaussianBlur(rescaled, (27,27), 1.2)
+mean_img, SD_img = cv2.meanStdDev(blurred_img)
+min_img, max_img = np.amin(blurred_img), np.amax(blurred_img)
 
-thresh_img1 = cv2.threshold(blurred_img, max_img - 3 * SD_img, 255, cv2.THRESH_BINARY)[1]
+thresh_img1 = cv2.threshold(blurred_img, max_img - SD_img, 255, cv2.THRESH_BINARY)[1]
 
 
-cv2.imshow("Image", blurred_img)
+cv2.imshow("Image", thresh_img1)
 cv2.waitKey(0)
 
 
