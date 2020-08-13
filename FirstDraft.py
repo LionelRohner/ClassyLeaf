@@ -9,6 +9,8 @@ from PIL import Image
 from skimage import data, color
 from skimage.transform import rescale, resize, downscale_local_mean
 from imutils import contours
+from pylab import *
+from skimage import measure
 
 ### Import Pics ###
 
@@ -21,14 +23,9 @@ filename = '\FA1.jpg'
 image = cv2.imread(path + filename)
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
 
-# cant get smaller
-rescaled = rescale(image, 0.2, anti_aliasing=True)
-# cv2.imshow("Image", rescaled)
-# cv2.waitKey(0)
-
 ### Downsampling ###
 
-
+rescaled = rescale(image, 0.2, anti_aliasing=True)
 
 ### Normalize and threshold ###
 
@@ -40,40 +37,45 @@ min_img, max_img = np.amin(blurred_img), np.amax(blurred_img)
 # threshold
 thresh_img = cv2.threshold(blurred_img, max_img - 2*SD_img, 255, cv2.THRESH_BINARY)[1]
 
-# canny edged
-# edged = cv2.Canny(thresh_img, 30, 200)
+cv2.imshow("Image", thresh_img)
+cv2.waitKey(0)
 
-contours, hierarchy = cv2.findContours(thresh_img, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+labels = measure.label(thresh_img, background=0)
+mask = np.zeros(thresh_img.shape, dtype="uint8")
 
-#create an empty image for contours
-img_contours = np.zeros(image.shape)
-# draw the contours on the empty image
-cnt_img = cv2.drawContours(img_contours, contours, -1, (0,255,0), 3)
-print(cnt_img)
+# loop over the unique components
+for label in np.unique(labels):
 
-# cv2.imshow("Image", cnt_img)
-# cv2.waitKey(0)
+    # if this is the background label, ignore it
+    if label == 0:
+        continue
+
+    # otherwise, construct the label mask and count the
+    # number of pixels
+    labelMask = np.zeros(thresh_img.shape, dtype="uint8")
+    labelMask[labels == label] = 255
+    numPixels = cv2.countNonZero(labelMask)
+    print(numPixels)
+
+    # if the number of pixels in the component is sufficiently
+    # large, then add it to our mask of "large blobs"
+    if numPixels > 10000:
+        mask = cv2.add(mask, labelMask)
+        # alternatively save masks individually and use biggest blob
+
+
+blob_contour = cv2.findContours(mask.copy(), cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+blob_contour = imutils.grab_contours(blob_contour)
+
+contours_img = cv2.drawContours(rescaled, blob_contour, -1, (0,255,0), 2)
+
+
+cv2.imshow("Image", contours_img)
+cv2.waitKey(0)
 
 
 quit()
 
 
-
-
-
-
-
-
-# thresholding of the images and conversion to a binary image
-# 3SD away from max value of image (= 255) seems reasonable
-thresh_img1 = cv2.threshold(blurred_img, max_img - 3 * SD_img, 255, cv2.THRESH_BINARY)[1]
-
-# The next key step is to make the shape of the electrodes more clear. Need to flip the invert image again
-# otherwise eroded and dilate are all backwards... I could not flip at the beginning and redo the normalization
-# and take the lowest values but I m too lazy
-thresh_img1 = cv2.bitwise_not(thresh_img1)
-
-# create a nice ellipsoid kernel since we have round shape.
-kernel_erode = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (3, 3))
 
 ### Contour Detection ###
