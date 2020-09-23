@@ -14,10 +14,16 @@ from skimage import measure
 
 ### Import Pics ###
 
+
+print(cv2.__version__)
+
 # set path and file
 path = r'C:\Users\stryc\OneDrive\GitHub\Projects\ClassyLeaf\Pics'
 # folder = '\F1'
 filename = '\FA1.jpg'
+
+
+# something was changed here...
 
 # load image
 image = cv2.imread(path + filename)
